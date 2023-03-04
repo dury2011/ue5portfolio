@@ -3,14 +3,15 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "projectF5.h"
+#include "CIteminterface.h"
 
 ACCharacter::ACCharacter()
 	: _CharacterStats{ 0, 100.0f, 100.0f, 100.0f }, _BControl(true), _BCamera(true), _CameraSpringArmLength(700.0f)
 {
 	PrimaryActorTick.bCanEverTick = true;
-
 	RootComponent = GetCapsuleComponent();
-
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ACCharacter::TriggerBeginOverlap);
 	//GetCharacterMovement()->bOrientRotationToMovement = false;
 	//bUseControllerRotationYaw = true;
 	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
@@ -33,7 +34,6 @@ ACCharacter::ACCharacter()
 		// 그냥 이렇게 하면 안되나? 컴파일 결과 이렇게 해도 문제 없는 듯함. 
 		_CameraComponent->SetupAttachment(_SpringArmComponent);
 	}
-
 }
 
 void ACCharacter::Tick(float DeltaTime)
@@ -55,6 +55,15 @@ void ACCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		PlayerInputComponent->BindAction(TEXT("Action"), EInputEvent::IE_Pressed, this, &ACCharacter::Action);
 		PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACCharacter::Jump);
 	}
+}
+
+void ACCharacter::TriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	ICIteminterface* _itemInterface = Cast<ICIteminterface>(OtherActor);
+	if (_itemInterface) { 
+		UE_LOG(projectF5, Warning, TEXT("Function Called: %s"), *FString("ACItem::TriggerBeginOverlap()")); 
+		_CharacterStats.Hp += _itemInterface->ActivateItemAbility(); 
+	}	
 }
 
 void ACCharacter::MoveForward(float axisValue)

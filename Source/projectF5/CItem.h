@@ -19,7 +19,8 @@ class PROJECTF5_API ACItem : public AActor, public ICIteminterface
 // properties
 // ******************************************************************************************************
 public:
-
+	UPROPERTY(EditDefaultsOnly)
+	class USphereComponent* _SphereComponent;
 private:
 	// 아이템 종류
 	UPROPERTY(EditDefaultsOnly)
@@ -27,9 +28,9 @@ private:
 
 	// 수치 버프 값
 	UPROPERTY(EditDefaultsOnly)
-	float _BuffFloatValue;
-
+	float _BuffFloatValue = 150.0f;
 protected:
+
 // ******************************************************************************************************
 // methods
 // ******************************************************************************************************
