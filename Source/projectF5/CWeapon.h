@@ -2,46 +2,30 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "CIteminterface.h"
-#include "CItem.generated.h"
-
-UENUM(BlueprintType)
-enum class EItemType : uint8
-{
-	Hp, Mp, Sp, Max
-};
+#include "CWeapon.generated.h"
 
 UCLASS()
-class PROJECTF5_API ACItem : public AActor, public ICIteminterface
+class PROJECTF5_API ACWeapon : public AActor
 {
 	GENERATED_BODY()
 // ******************************************************************************************************
 // properties
 // ******************************************************************************************************
 public:
-	UPROPERTY(EditDefaultsOnly)
-	class USphereComponent* _SphereComponent;
 private:
-	// 아이템 종류
-	UPROPERTY(EditDefaultsOnly)
-	EItemType _ItemType;
-
-	// 수치 버프 값
-	UPROPERTY(EditDefaultsOnly)
-	float _BuffFloatValue;
 protected:
-
+	UPROPERTY()
+	class ACharacter* _Owner;
 // ******************************************************************************************************
 // methods
 // ******************************************************************************************************
 public:	
-	ACItem();
+	ACWeapon();
 	virtual void Tick(float DeltaTime) override;
-	// interface override
-	virtual float ActivateItemAbility() override;
 
 private:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Attack(); 
 };

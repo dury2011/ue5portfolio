@@ -3,8 +3,9 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
-#include "projectF5.h"
+//#include "projectF5.h"
 #include "CIteminterface.h"
+#include "CWeapon.h"
 
 ACCharacter::ACCharacter()
 	: _CharacterStats{ 0, 100.0f, 100.0f, 100.0f }, _BControl(true), _BCamera(true), _CameraSpringArmLength(700.0f)
@@ -34,6 +35,12 @@ ACCharacter::ACCharacter()
 		// 그냥 이렇게 하면 안되나? 컴파일 결과 이렇게 해도 문제 없는 듯함. 
 		_CameraComponent->SetupAttachment(_SpringArmComponent);
 	}
+
+	//// 임시: 캐릭터 소캣에다가 붙여줘야됨 코드 컴파일 확인하려고 임시 작성함
+	//if (_WeaponClass)
+	//{
+	//	_Weapon = Cast<ACWeapon>(SpawnCharacterUsingObjectActorClassOriented(_WeaponClass));
+	//}
 }
 
 void ACCharacter::Tick(float DeltaTime)
@@ -60,8 +67,9 @@ void ACCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 void ACCharacter::TriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ICIteminterface* _itemInterface = Cast<ICIteminterface>(OtherActor);
-	if (_itemInterface) { 
-		UE_LOG(projectF5, Warning, TEXT("Function Called: %s"), *FString("ACItem::TriggerBeginOverlap()")); 
+	if (_itemInterface) 
+	{ 
+		UE_LOG(LogTemp, Warning, TEXT("Function Called: %s"), *FString("ACItem::TriggerBeginOverlap()")); 
 		_CharacterStats.Hp += _itemInterface->ActivateItemAbility(); 
 	}	
 }
@@ -90,6 +98,22 @@ void ACCharacter::VerticalLook(float axisValue)
 void ACCharacter::HorizontalLook(float axisValue)
 {
 	AddControllerYawInput(axisValue);
+}
+
+AActor* ACCharacter::SpawnCharacterUsingObjectActorClassOriented(TSubclassOf<class AActor> InActorClass)
+{
+	FActorSpawnParameters _params;
+	_params.Owner = this;
+
+	return GetWorld()->SpawnActor<AActor>(InActorClass, FVector::ZeroVector, FRotator::ZeroRotator, _params);
+}
+
+AActor* ACCharacter::SpawnCharacterUsingObjectActorClassOriented(TSubclassOf<class AActor> InActorClass, FName InSpawnSocketName)
+{
+	FActorSpawnParameters _params;
+	_params.Owner = this;
+
+	return GetWorld()->SpawnActor<AActor>(InActorClass, GetMesh()->GetSocketTransform(InSpawnSocketName), _params);
 }
 
 void ACCharacter::Action()

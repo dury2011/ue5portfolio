@@ -42,6 +42,14 @@ protected:
 	// 카메라 스프링 암 길이
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float _CameraSpringArmLength;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<class ACWeapon> _WeaponClass;
+
+	// 배열로 만들 수 없을까?
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	class ACWeapon* _Weapon;
+
 // ******************************************************************************************************
 // methods
 // ******************************************************************************************************
@@ -49,11 +57,16 @@ public:
 	ACCharacter();
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
 private:
 	void MoveForward(float axisValue);
 	void MoveRight(float axisValue);
 	void VerticalLook(float axisValue);
 	void HorizontalLook(float axisValue);
+	// 캐릭터가 사용하는 물체를 Spawn하고 AActor*로 반환 (zero location, zero rotator)
+	AActor* SpawnCharacterUsingObjectActorClassOriented(TSubclassOf<class AActor> InActorClass);
+	// 캐릭터가 사용하는 물체를 Spawn하고 AActor*로 반환 (socket location, socket rotator)
+	AActor* SpawnCharacterUsingObjectActorClassOriented(TSubclassOf<class AActor> InActorClass, FName InSpawnSocketName);
 
 protected:
 	virtual void Action();
