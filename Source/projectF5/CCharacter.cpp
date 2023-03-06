@@ -8,32 +8,35 @@
 #include "CWeapon.h"
 
 ACCharacter::ACCharacter()
-	: _CharacterStats{ 0, 100.0f, 100.0f, 100.0f }, _BControl(true), _BCamera(true), _CameraSpringArmLength(700.0f)
+	: _ActType(ECharacterActType::Idle), _CharacterStats { 0, 100.0f, 100.0f, 100.0f }, _BControl(true), _BCamera(true)/*, _CameraSpringArmLength(700.0f)*/
 {
 	PrimaryActorTick.bCanEverTick = true;
 	RootComponent = GetCapsuleComponent();
-	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ACCharacter::TriggerBeginOverlap);
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ACCharacter::BeginOverlap);
 	//GetCharacterMovement()->bOrientRotationToMovement = false;
 	//bUseControllerRotationYaw = true;
 	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 
 	if (_BControl && _BCamera)
 	{
-		_SpringArmComponent = CreateDefaultSubobject <USpringArmComponent>("Spring Arm Component");
-		_SpringArmComponent->SetupAttachment(GetCapsuleComponent());
-		_SpringArmComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-		_SpringArmComponent->TargetArmLength = 700.0f;
-		_SpringArmComponent->bDoCollisionTest = false;
-		_SpringArmComponent->bUsePawnControlRotation = true;
-		_SpringArmComponent->SocketOffset = FVector(0.0f, 0.0f, 0.0f);
-		_SpringArmComponent->bEnableCameraLag = true;
-		_SpringArmComponent->CameraLagSpeed = 7.5f;
+		//_SpringArmComponent = CreateDefaultSubobject <USpringArmComponent>("Spring Arm Component");
+		//_SpringArmComponent->SetupAttachment(GetCapsuleComponent());
+		//_SpringArmComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
+		//_SpringArmComponent->TargetArmLength = _CameraSpringArmLength;
+		//_SpringArmComponent->bDoCollisionTest = false;
+		//_SpringArmComponent->bUsePawnControlRotation = true;
+		//_SpringArmComponent->SocketOffset = FVector(0.0f, 0.0f, 0.0f);
+		//_SpringArmComponent->bEnableCameraLag = true;
+		//_SpringArmComponent->CameraLagSpeed = 7.5f;
 		_CameraComponent = CreateDefaultSubobject<UCameraComponent>("Camera Component");
 		// UE4POFOL_F에서는 CHelpers.h로 확인해보니까 이렇게 되있는데? 이해가 안된다. 
 		//_springArmComponent->SetupAttachment(NULL, "Camera Component");
 		//SetRootComponent(_cameraComponent);
 		// 그냥 이렇게 하면 안되나? 컴파일 결과 이렇게 해도 문제 없는 듯함. 
-		_CameraComponent->SetupAttachment(_SpringArmComponent);
+		// _CameraComponent->SetupAttachment(_SpringArmComponent);
+		// below: https://forums.unrealengine.com/t/attaching-camera-to-head-socket/119911/3
+		//_CameraComponent->SetupAttachment(GetMesh());
+		_CameraComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "head");
 	}
 
 	//// 임시: 캐릭터 소캣에다가 붙여줘야됨 코드 컴파일 확인하려고 임시 작성함
@@ -61,10 +64,18 @@ void ACCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 
 		PlayerInputComponent->BindAction(TEXT("Action"), EInputEvent::IE_Pressed, this, &ACCharacter::Action);
 		PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACCharacter::Jump);
+		PlayerInputComponent->BindAction(TEXT("Crouch"), EInputEvent::IE_Pressed, this, &ACCharacter::Crouching);
+		PlayerInputComponent->BindAction(TEXT("KneelDown"), EInputEvent::IE_Pressed, this, &ACCharacter::Crawl);
+		PlayerInputComponent->BindAction(TEXT("ViewChange"), EInputEvent::IE_Pressed, this, &ACCharacter::ViewChange);
 	}
 }
 
-void ACCharacter::TriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+ECharacterActType ACCharacter::GetCharacterActType()
+{
+	return _ActType;
+}
+
+void ACCharacter::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ICIteminterface* _itemInterface = Cast<ICIteminterface>(OtherActor);
 	if (_itemInterface) 
@@ -100,12 +111,18 @@ void ACCharacter::HorizontalLook(float axisValue)
 	AddControllerYawInput(axisValue);
 }
 
-AActor* ACCharacter::SpawnCharacterUsingObjectActorClassOriented(TSubclassOf<class AActor> InActorClass)
+// below: https://www.youtube.com/watch?v=0mgm16ki8zM&list=PLL0cLF8gjBprG6487lxqSq-aEo6ZXLDLg&index=2
+void ACCharacter::ViewChange()
+{
+	
+}
+
+AActor* ACCharacter::SpawnCharacterUsingObjectActorClassOriented(TSubclassOf<class AActor> InActorClass, FTransform InSpawnTransform)
 {
 	FActorSpawnParameters _params;
 	_params.Owner = this;
 
-	return GetWorld()->SpawnActor<AActor>(InActorClass, FVector::ZeroVector, FRotator::ZeroRotator, _params);
+	return GetWorld()->SpawnActor<AActor>(InActorClass, InSpawnTransform, _params);
 }
 
 AActor* ACCharacter::SpawnCharacterUsingObjectActorClassOriented(TSubclassOf<class AActor> InActorClass, FName InSpawnSocketName)
@@ -126,7 +143,22 @@ void ACCharacter::Jump()
 	bPressedJump = true;
 }
 
+void ACCharacter::Crouching()
+{
+	//Super::Crouch();
+	//ACharacter에 있는 함수
+	//Crouch();
+	//_ActType = ECharacterActType::Crouch;
+}
+
+void ACCharacter::Crawl()
+{
+	//_ActType = ECharacterActType::KneelDown;
+}
+
 void ACCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//if(_SpringArmComponent) _SpringArmComponent->TargetArmLength = _CameraSpringArmLength;
 }

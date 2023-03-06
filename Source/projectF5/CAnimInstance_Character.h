@@ -1,15 +1,10 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+#include "CCharacter.h"
 #include "CAnimInstance_Character.generated.h"
 
-
-/**
- * 
- */
 UCLASS()
 class PROJECTF5_API UCAnimInstance_Character : public UAnimInstance
 {
@@ -23,6 +18,9 @@ private:
 	UPROPERTY()
 	class ACharacter* _AnimInstanceOwner;
 
+	//UPROPERTY()
+	class ICCharacterAnimationinterface* _AnimationInterface;
+
 protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	float _Speed;
@@ -35,6 +33,19 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	float _Roll;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float _Direction;
+
+	// 열거체 사용을 위해 CCharacter.h 포함하면 성능상에 문제가 있을까? 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	ECharacterActType _CharacterActType;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	bool _BInAir;
+
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	bool _BAccelerating;
 
 // ******************************************************************************************************************
 // methods

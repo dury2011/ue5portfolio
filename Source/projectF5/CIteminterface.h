@@ -15,5 +15,5 @@ class PROJECTF5_API ICIteminterface
 	GENERATED_BODY()
 
 public:
-	virtual float ActivateItemAbility() = 0;
+	virtual float ActivateItemAbility() { return 0.0f; }
 };
