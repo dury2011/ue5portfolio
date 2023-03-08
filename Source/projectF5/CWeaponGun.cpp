@@ -30,6 +30,6 @@ void ACWeaponGun::Attack()
 
 	// 수정 필요할 수도
 	//if (_ProjectileClass && _weaponGun)
-		//_Projectile = GetWorld()->SpawnActor<ACProjectile>(_ProjectileClass, _weaponGun->GetMesh()->GetSocketTransform(_SocketName), _params);
+		//_Projectile = GetWorld()->SpawnActor<ACProjectile>(_ProjectileClass, _weaponGun->GetMesh()->GetSocketTransform(_MuzzleSocketName), _params);
 	// Projectile은 속도가 빠르므로 굳이 Muzzle에서 나갈 필요가 없을지도? _Owner에서 소캣 만들어서 마찬가지로 무기마다 다르게 발사되도록 해도 될듯?
 }

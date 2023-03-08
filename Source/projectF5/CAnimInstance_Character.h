@@ -47,6 +47,9 @@ protected:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	bool _BAccelerating;
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	float _GunIdlePlayRate = 1.0f;
+
 // ******************************************************************************************************************
 // methods
 // ******************************************************************************************************************

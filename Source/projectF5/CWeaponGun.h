@@ -14,7 +14,7 @@ class PROJECTF5_API ACWeaponGun : public ACWeapon
 public:
 	// 무기마다 소켓 위치가 다르므로 이름 필요
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FName _SocketName;
+	FName _MuzzleSocketName;
 
 private:
 	UPROPERTY(EditDefaultsOnly)

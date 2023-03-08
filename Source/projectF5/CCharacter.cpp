@@ -6,38 +6,28 @@
 //#include "projectF5.h"
 #include "CIteminterface.h"
 #include "CWeapon.h"
+#include "CInGameUMGData.h"
 
 ACCharacter::ACCharacter()
-	: _ActType(ECharacterActType::Idle), _CharacterStats { 0, 100.0f, 100.0f, 100.0f }, _BControl(true), _BCamera(true)/*, _CameraSpringArmLength(700.0f)*/
+	: _ActType(ECharacterActType::Idle), 
+	_CharacterStats { 0, 100.0f, 100.0f, 100.0f }, 
+	_BCamera(true)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	RootComponent = GetCapsuleComponent();
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ACCharacter::BeginOverlap);
-	//GetCharacterMovement()->bOrientRotationToMovement = false;
-	//bUseControllerRotationYaw = true;
-	//GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
 
-	if (_BControl && _BCamera)
+	if (_BCamera)
 	{
-		//_SpringArmComponent = CreateDefaultSubobject <USpringArmComponent>("Spring Arm Component");
-		//_SpringArmComponent->SetupAttachment(GetCapsuleComponent());
-		//_SpringArmComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
-		//_SpringArmComponent->TargetArmLength = _CameraSpringArmLength;
-		//_SpringArmComponent->bDoCollisionTest = false;
-		//_SpringArmComponent->bUsePawnControlRotation = true;
-		//_SpringArmComponent->SocketOffset = FVector(0.0f, 0.0f, 0.0f);
-		//_SpringArmComponent->bEnableCameraLag = true;
-		//_SpringArmComponent->CameraLagSpeed = 7.5f;
+		_InGameUMGData->SetCharacterHp(_CharacterStats.Hp);
+		_InGameUMGData->SetCharacterMp(_CharacterStats.Mp);
+		_InGameUMGData->SetCharacterSp(_CharacterStats.Sp);
+
 		_CameraComponent = CreateDefaultSubobject<UCameraComponent>("Camera Component");
-		// UE4POFOL_F에서는 CHelpers.h로 확인해보니까 이렇게 되있는데? 이해가 안된다. 
-		//_springArmComponent->SetupAttachment(NULL, "Camera Component");
-		//SetRootComponent(_cameraComponent);
-		// 그냥 이렇게 하면 안되나? 컴파일 결과 이렇게 해도 문제 없는 듯함. 
-		// _CameraComponent->SetupAttachment(_SpringArmComponent);
 		// below: https://forums.unrealengine.com/t/attaching-camera-to-head-socket/119911/3
-		//_CameraComponent->SetupAttachment(GetMesh());
 		_CameraComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "head");
 	}
+
 
 	//// 임시: 캐릭터 소캣에다가 붙여줘야됨 코드 컴파일 확인하려고 임시 작성함
 	//if (_WeaponClass)
@@ -55,7 +45,7 @@ void ACCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	if (_BControl && _BCamera)
+	if (_BCamera)
 	{
 		PlayerInputComponent->BindAxis(TEXT("MoveForward"), this, &ACCharacter::MoveForward);
 		PlayerInputComponent->BindAxis(TEXT("MoveRight"), this, &ACCharacter::MoveRight);
@@ -65,14 +55,9 @@ void ACCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		PlayerInputComponent->BindAction(TEXT("Action"), EInputEvent::IE_Pressed, this, &ACCharacter::Action);
 		PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACCharacter::Jump);
 		PlayerInputComponent->BindAction(TEXT("Crouch"), EInputEvent::IE_Pressed, this, &ACCharacter::Crouching);
-		PlayerInputComponent->BindAction(TEXT("KneelDown"), EInputEvent::IE_Pressed, this, &ACCharacter::Crawl);
+		PlayerInputComponent->BindAction(TEXT("Crawl"), EInputEvent::IE_Pressed, this, &ACCharacter::Crawl);
 		PlayerInputComponent->BindAction(TEXT("ViewChange"), EInputEvent::IE_Pressed, this, &ACCharacter::ViewChange);
 	}
-}
-
-ECharacterActType ACCharacter::GetCharacterActType()
-{
-	return _ActType;
 }
 
 void ACCharacter::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -80,24 +65,26 @@ void ACCharacter::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 	ICIteminterface* _itemInterface = Cast<ICIteminterface>(OtherActor);
 	if (_itemInterface) 
 	{ 
-		UE_LOG(LogTemp, Warning, TEXT("Function Called: %s"), *FString("ACItem::TriggerBeginOverlap()")); 
+		UE_LOG(LogTemp, Warning, TEXT("Function Called: %s"), *FString("ACCharacter::TriggerBeginOverlap()")); 
 		_CharacterStats.Hp += _itemInterface->ActivateItemAbility(); 
 	}	
 }
 
 void ACCharacter::MoveForward(float axisValue)
 {
+	//UE_LOG(LogTemp, Warning, TEXT("Function Called: %s"), *FString("ACCharacter::MoveForward()"));
+
 	FRotator rotation = FRotator(0, GetControlRotation().Yaw, 0);
 	FVector direction = FQuat(rotation).GetForwardVector().GetSafeNormal2D();
-
 	AddMovementInput(direction, axisValue, true);
 }
 
 void ACCharacter::MoveRight(float axisValue)
 {
+	//UE_LOG(LogTemp, Warning, TEXT("Function Called: %s"), *FString("ACCharacter::MoveRight()"));
+	
 	FRotator rotation = FRotator(0, GetControlRotation().Yaw, 0);
 	FVector direction = FQuat(rotation).GetRightVector().GetSafeNormal2D();
-
 	AddMovementInput(direction, axisValue, true);
 }
 
@@ -115,22 +102,6 @@ void ACCharacter::HorizontalLook(float axisValue)
 void ACCharacter::ViewChange()
 {
 	
-}
-
-AActor* ACCharacter::SpawnCharacterUsingObjectActorClassOriented(TSubclassOf<class AActor> InActorClass, FTransform InSpawnTransform)
-{
-	FActorSpawnParameters _params;
-	_params.Owner = this;
-
-	return GetWorld()->SpawnActor<AActor>(InActorClass, InSpawnTransform, _params);
-}
-
-AActor* ACCharacter::SpawnCharacterUsingObjectActorClassOriented(TSubclassOf<class AActor> InActorClass, FName InSpawnSocketName)
-{
-	FActorSpawnParameters _params;
-	_params.Owner = this;
-
-	return GetWorld()->SpawnActor<AActor>(InActorClass, GetMesh()->GetSocketTransform(InSpawnSocketName), _params);
 }
 
 void ACCharacter::Action()
@@ -153,7 +124,7 @@ void ACCharacter::Crouching()
 
 void ACCharacter::Crawl()
 {
-	//_ActType = ECharacterActType::KneelDown;
+	//_ActType = ECharacterActType::Crawl;
 }
 
 void ACCharacter::BeginPlay()
@@ -161,4 +132,30 @@ void ACCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	//if(_SpringArmComponent) _SpringArmComponent->TargetArmLength = _CameraSpringArmLength;
+}
+
+ACWeapon* ACCharacter::SpawnCharacterUsingObject(TSubclassOf<class ACWeapon> InActorClass, FName InSpawnSocketName)
+{
+	FActorSpawnParameters _params;
+	_params.Owner = this;
+
+	return GetWorld()->SpawnActor<ACWeapon>(InActorClass, GetMesh()->GetSocketTransform(InSpawnSocketName), _params);
+}
+
+ACWeaponGun* ACCharacter::SpawnCharacterUsingObject(TSubclassOf<class ACWeaponGun> InActorClass, FName InSpawnSocketName)
+{
+	FActorSpawnParameters _params;
+	_params.Owner = this;
+
+	return GetWorld()->SpawnActor<ACWeaponGun>(InActorClass, GetMesh()->GetSocketTransform(InSpawnSocketName), _params);
+}
+
+void ACCharacter::AttachCharacterUsingObject(class ACWeaponGun* InAttachWeapon, FName InAttackSocketName)
+{
+	InAttachWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, InAttackSocketName);
+}
+
+void ACCharacter::AttachCharacterUsingObject(class ACWeapon* InAttachWeapon, FName InAttackSocketName)
+{
+	InAttachWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, InAttackSocketName);
 }

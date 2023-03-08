@@ -1,12 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
-#include "CWeapon.generated.h"
+#include "UObject/NoExportTypes.h"
+#include "CInGameUMGData.generated.h"
 
-/* Transform 조정은 BP 확인 */
 UCLASS()
-class PROJECTF5_API ACWeapon : public AActor
+class PROJECTF5_API UCInGameUMGData : public UObject
 {
 	GENERATED_BODY()
 // ******************************************************************************************************
@@ -14,25 +13,25 @@ class PROJECTF5_API ACWeapon : public AActor
 // ******************************************************************************************************
 public:
 private:
+	int32 _Level;
+	float _Hp;
+	float _Mp;
+	float _Sp;
 protected:
-	UPROPERTY(BlueprintReadOnly)
-	class ACharacter* _Owner;
-
-	UPROPERTY(EditDefaultsOnly)
-	class USkeletalMeshComponent* _SkeletalMeshComponent;
-
-	UPROPERTY(EditDefaultsOnly)
-	class UCapsuleComponent* _CapsuleComponent;
 // ******************************************************************************************************
 // methods
 // ******************************************************************************************************
-public:	
-	ACWeapon();
-	virtual void Tick(float DeltaTime) override;
+public:
+	UCInGameUMGData();
+	void SetCharacterLv(int32 InLv);
+	void SetCharacterHp(float InHp);
+	void SetCharacterMp(float InMp);
+	void SetCharacterSp(float InSp);
 
+	int32 GetCharacterLv();
+	float GetCharacterHp();
+	float GetCharacterMp();
+	float GetCharacterSp();
 private:
-
 protected:
-	virtual void BeginPlay() override;
-	virtual void Attack(); 
 };

@@ -1,38 +1,40 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
-#include "CWeapon.generated.h"
+#include "CCharacter.h"
+#include "CCharacterPlayer.generated.h"
 
-/* Transform 조정은 BP 확인 */
 UCLASS()
-class PROJECTF5_API ACWeapon : public AActor
+class PROJECTF5_API ACCharacterPlayer : public ACCharacter
 {
 	GENERATED_BODY()
+
 // ******************************************************************************************************
 // properties
 // ******************************************************************************************************
 public:
 private:
+	UPROPERTY(EditDefaultsOnly)
+	FName _RifleHolsterSocketName;
+
+	UPROPERTY(EditDefaultsOnly)
+	FName _RifleEquipHipSocketName;
 protected:
-	UPROPERTY(BlueprintReadOnly)
-	class ACharacter* _Owner;
-
-	UPROPERTY(EditDefaultsOnly)
-	class USkeletalMeshComponent* _SkeletalMeshComponent;
-
-	UPROPERTY(EditDefaultsOnly)
-	class UCapsuleComponent* _CapsuleComponent;
 // ******************************************************************************************************
 // methods
 // ******************************************************************************************************
-public:	
-	ACWeapon();
+public:
+	ACCharacterPlayer();
 	virtual void Tick(float DeltaTime) override;
-
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 private:
-
+	void Rifle();
+	void Pistol();
+	void Knife();
+	void Grenade();
+	void OnAim();
+	void OffAim();
 protected:
+	virtual void Action() override final;
 	virtual void BeginPlay() override;
-	virtual void Attack(); 
 };

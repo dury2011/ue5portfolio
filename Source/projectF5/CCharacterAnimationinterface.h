@@ -22,4 +22,5 @@ class PROJECTF5_API ICCharacterAnimationinterface
 
 public:
 	virtual ECharacterActType GetCharacterActType() { return ECharacterActType::Max; }
+	virtual float GetGunIdleAnimationPlayRate() { return 0.0f; }
 };
