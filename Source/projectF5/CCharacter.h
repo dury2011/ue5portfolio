@@ -8,7 +8,6 @@
 #include "CCharacter.generated.h"
 
 
-
 // Transform 조정은 블루프린트에서 함
 UCLASS()
 class PROJECTF5_API ACCharacter : public ACharacter, public ICCharacterAnimationinterface, public ICIngameUMGinterface
@@ -19,11 +18,6 @@ class PROJECTF5_API ACCharacter : public ACharacter, public ICCharacterAnimation
 // ******************************************************************************************************
 public:
 private:
-	UPROPERTY(EditDefaultsOnly)
-	class UCameraComponent* _CameraComponent;
-
-	UPROPERTY()
-	ECharacterActType _ActType;
 
 	UPROPERTY()
 	class UCInGameUMGData* _InGameUMGData;
@@ -33,7 +27,6 @@ protected:
 	struct Stats
 	{
 		int32 Level;
-		
 		float Hp;
 		float Mp;
 		float Sp;
@@ -41,14 +34,23 @@ protected:
 
 	struct WeaponSlot
 	{
+		// Aim 중에 무기 변경 금지
 		bool BAiming;
-		// Aim중에 Idle 애니메이션의 재생을 막아서 애니메이션으로 인한 흔들림 방지
-		float GunIdleAnimationPlayRate = 1.0f;
 		ECharacterWeaponSlotType CurrentWeaponSlotType = ECharacterWeaponSlotType::Max;
 		TArray<class ACWeapon*> Weapons;
 	} _CharacterWeaponSlot;
-	
+
+	struct Animation
+	{
+		// Aim중에 Idle 애니메이션의 재생을 막아서 애니메이션으로 인한 흔들림 방지
+		float GunIdleAnimationPlayRate = 1.0f;
+		ECharacterWeaponAnimationType WeaponAnimationType;
+	}_CharacterAnimation;
 	// 카메라가 존재하는가?
+	
+	UPROPERTY(EditDefaultsOnly)
+	class UCameraComponent* _CameraComponent;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	bool _BCamera;
 
@@ -66,8 +68,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	// 캐릭터 애니메이션 인터페이스 재정의
-	FORCEINLINE virtual ECharacterActType GetCharacterActType() override { return _ActType; }
-	FORCEINLINE virtual float GetGunIdleAnimationPlayRate() override { return _CharacterWeaponSlot.GunIdleAnimationPlayRate; }
+	FORCEINLINE virtual ECharacterWeaponAnimationType GetCharacterWeaponAnimationType() override { return _CharacterAnimation.WeaponAnimationType; }
+	FORCEINLINE virtual float GetGunIdleAnimationPlayRate() override { return _CharacterAnimation.GunIdleAnimationPlayRate; }
 	// 인게임 UMG 데이터 인터페이스 재정의
 	FORCEINLINE virtual UCInGameUMGData* GetInGameUMGData() override { return _InGameUMGData; }
 

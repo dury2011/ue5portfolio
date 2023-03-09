@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "CCharacter.h"
+#include "Components/TimelineComponent.h"
 #include "CCharacterPlayer.generated.h"
 
 UCLASS()
@@ -15,10 +16,28 @@ class PROJECTF5_API ACCharacterPlayer : public ACCharacter
 public:
 private:
 	UPROPERTY(EditDefaultsOnly)
-	FName _RifleHolsterSocketName;
+	FName _RifleHolsterSocketName = FName("RifleHolster");
 
 	UPROPERTY(EditDefaultsOnly)
-	FName _RifleEquipHipSocketName;
+	FName _RifleEquipSocketName = FName("RifleEquip");
+
+	UPROPERTY(EditDefaultsOnly)
+	FName _ADSSocketName = FName("ADS");
+
+	// https://unrealcommunity.wiki/timeline-in-cpp-1uktygtd Âü°í
+	struct AimTimeline
+	{
+		UPROPERTY()
+		class UTimelineComponent* AimTimeline;
+
+		UPROPERTY()
+		class UCurveFloat* AimCurve;
+
+		FOnTimelineFloat OnAimTimelineCallback;
+
+		float InterpFloat = 0.0f;
+	} _AimTimeline;
+
 protected:
 // ******************************************************************************************************
 // methods
@@ -34,6 +53,7 @@ private:
 	void Grenade();
 	void OnAim();
 	void OffAim();
+	void AimTimelineUpdateCallback(float InterpValue);
 protected:
 	virtual void Action() override final;
 	virtual void BeginPlay() override;

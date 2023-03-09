@@ -19,6 +19,11 @@ void ACWeapon::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void ACWeapon::AttachWeaponUsingObject(class USceneComponent* InAttachComponent, FName InAttachSocketName)
+{
+	InAttachComponent->AttachToComponent(_SkeletalMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, InAttachSocketName);
+}
+
 void ACWeapon::BeginPlay()
 {
 	Super::BeginPlay();

@@ -39,7 +39,7 @@ protected:
 
 	// 열거체 사용을 위해 CCharacter.h 포함하면 성능상에 문제가 있을까? 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
-	ECharacterActType _CharacterActType;
+	ECharacterWeaponAnimationType _WeaponAnimationType;
 
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	bool _BInAir;

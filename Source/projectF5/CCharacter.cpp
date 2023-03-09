@@ -9,8 +9,7 @@
 #include "CInGameUMGData.h"
 
 ACCharacter::ACCharacter()
-	: _ActType(ECharacterActType::Idle), 
-	_CharacterStats { 0, 100.0f, 100.0f, 100.0f }, 
+	: _CharacterStats{ 0, 100.0f, 100.0f, 100.0f }, 
 	_BCamera(true)
 {
 	PrimaryActorTick.bCanEverTick = true;

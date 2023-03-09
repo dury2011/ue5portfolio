@@ -29,7 +29,7 @@ protected:
 public:	
 	ACWeapon();
 	virtual void Tick(float DeltaTime) override;
-
+	void AttachWeaponUsingObject(class USceneComponent* InAttachComponent, FName InAttachSocketName);
 private:
 
 protected:

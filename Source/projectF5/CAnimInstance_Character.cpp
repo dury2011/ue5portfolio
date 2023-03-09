@@ -30,6 +30,6 @@ void UCAnimInstance_Character::NativeUpdateAnimation(float DeltaSeconds)
 	else _BAccelerating = false;
 	
 	if (_AnimationInterface == NULL) return;
-	_CharacterActType = _AnimationInterface->GetCharacterActType();
+	_WeaponAnimationType = _AnimationInterface->GetCharacterWeaponAnimationType();
 	_GunIdlePlayRate = _AnimationInterface->GetGunIdleAnimationPlayRate();
 }

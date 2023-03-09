@@ -20,6 +20,8 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class ACProjectile> _ProjectileClass;
 
+
+
 	UPROPERTY()
 	class ACProjectile* _Projectile;
 
