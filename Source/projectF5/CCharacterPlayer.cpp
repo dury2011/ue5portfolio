@@ -27,6 +27,8 @@ void ACCharacterPlayer::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAction(TEXT("Grenade"), EInputEvent::IE_Pressed, this, &ACCharacterPlayer::Grenade);
 	PlayerInputComponent->BindAction(TEXT("OnAim"), EInputEvent::IE_Pressed, this, &ACCharacterPlayer::OnAim);
 	PlayerInputComponent->BindAction(TEXT("OffAim"), EInputEvent::IE_Released, this, &ACCharacterPlayer::OffAim);
+	PlayerInputComponent->BindAction(TEXT("FireSelector"), EInputEvent::IE_Pressed, this, &ACCharacterPlayer::FireSelect);
+	PlayerInputComponent->BindAction(TEXT("Reload"), EInputEvent::IE_Pressed, this, &ACCharacterPlayer::Reload);
 }
 
 void ACCharacterPlayer::Rifle()
@@ -109,7 +111,8 @@ void ACCharacterPlayer::Grenade()
 // https://www.youtube.com/watch?v=bUGb8x_qYW0 참고
 void ACCharacterPlayer::OnAim()
 {
-	if (_CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Rifle1 || _CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Pistol2)
+	if (_CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Rifle1 || 
+		_CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Pistol2)
 	{
 		if (!_CharacterWeaponSlot.BAiming)
 		{
@@ -125,7 +128,8 @@ void ACCharacterPlayer::OnAim()
 
 void ACCharacterPlayer::OffAim()
 {
-	if (_CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Rifle1 || _CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Pistol2)
+	if (_CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Rifle1 || 
+		_CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Pistol2)
 	{
 		if (_CharacterWeaponSlot.BAiming)
 		{
@@ -133,18 +137,47 @@ void ACCharacterPlayer::OffAim()
 			_CharacterAnimation.GunIdleAnimationPlayRate = 1.0f;
 			_AimTimeline.AimTimeline->Play();
 			_CameraComponent->SetFieldOfView(UKismetMathLibrary::Lerp(90.0f, 45.0f, _AimTimeline.InterpFloat));
-			// 임시 무기마다 달라야 
 			_CameraComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "head");
 			_CameraComponent->SetRelativeRotation(FRotator(-100.0f, 0.0f, 75.0f));
-			/*_CharacterWeaponSlot.Weapons[(uint8)ECharacterWeaponSlotType::Rifle1]->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, _RifleEquipSocketName);*/
-
 		}
 	}
 }
 
-void ACCharacterPlayer::Action()
+void ACCharacterPlayer::FireSelect()
 {
- 
+	if (_CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Rifle1)
+	{
+		ACWeaponGun* _rifle = Cast<ACWeaponGun>(_CharacterWeaponSlot.Weapons[(uint8)ECharacterWeaponSlotType::Rifle1]);
+		if (_rifle)
+		{
+			if (_rifle->_FireSelectorType == ECharacterWeaponFireSelectorType::SemiAuto)
+			_rifle->_FireSelectorType = ECharacterWeaponFireSelectorType::FullAuto;
+			else _rifle->_FireSelectorType = ECharacterWeaponFireSelectorType::SemiAuto;
+		}
+		UE_LOG(LogTemp, Warning, TEXT("FireSelector: %d"), (uint8)_rifle->_FireSelectorType);
+	}
+}
+
+void ACCharacterPlayer::Reload()
+{
+	if (_CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Rifle1 || _CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Pistol2)
+	Cast<ACWeaponGun>(_CharacterWeaponSlot.Weapons[(uint8)_CharacterWeaponSlot.CurrentWeaponSlotType])->Reload();
+}
+
+void ACCharacterPlayer::OnAction()
+{
+	Super::OnAction();
+	
+	if (_CharacterWeaponSlot.CurrentWeaponSlotType != ECharacterWeaponSlotType::Max)
+	_CharacterWeaponSlot.Weapons[(uint8)_CharacterWeaponSlot.CurrentWeaponSlotType]->StartAbility();
+}
+
+void ACCharacterPlayer::OffAction()
+{
+	Super::OffAction();
+
+	if (_CharacterWeaponSlot.CurrentWeaponSlotType != ECharacterWeaponSlotType::Max)
+	_CharacterWeaponSlot.Weapons[(uint8)_CharacterWeaponSlot.CurrentWeaponSlotType]->EndAbility();
 }
 
 void ACCharacterPlayer::BeginPlay()
@@ -157,7 +190,7 @@ void ACCharacterPlayer::BeginPlay()
 	_AimTimeline.AimTimeline->SetPropertySetObject(this);
 
 	// BP에서 설정하는 경우는 반드시 BeginPlay
-	// https://stackoverflow.com/questions/59586835/why-cant-i-create-a-tsubclassof-to-use-in-a-spawnactor-function 참고
+	// https://stackoverflow.com/questions/59586835/why-cant-i-create-a-tsubclassof-to-use-in-a-spawnactor-function
 	if (_WeaponRifleClass) 
 	{
 		//_CharacterWeaponSlot.Weapons[(uint8)ECharacterWeaponSlotType::Rifle1] = Cast<ACWeapon>(SpawnCharacterUsingObject(_WeaponRifleClass, _RifleHolsterSocketName));

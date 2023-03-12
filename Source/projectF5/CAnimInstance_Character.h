@@ -5,6 +5,24 @@
 #include "CCharacter.h"
 #include "CAnimInstance_Character.generated.h"
 
+USTRUCT(BlueprintType)
+struct FIKRecoil
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	bool BApplyRecoil = true;
+
+	UPROPERTY(BlueprintReadOnly)
+	FTransform Recoil;
+
+	UPROPERTY(BlueprintReadOnly)
+	FTransform TotalRecoil;
+
+	UPROPERTY(BlueprintReadOnly)
+	FTransform EmptyTransform {FRotator::ZeroRotator, FVector3d::ZeroVector, FVector3d(1.0f, 1.0f, 1.0f) };
+};
+
 UCLASS()
 class PROJECTF5_API UCAnimInstance_Character : public UAnimInstance
 {
@@ -18,43 +36,46 @@ private:
 	UPROPERTY()
 	class ACharacter* _AnimInstanceOwner;
 
-	//UPROPERTY()
 	class ICCharacterAnimationinterface* _AnimationInterface;
 
 protected:
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly)
 	float _Speed;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly)
 	float _Yaw;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly)
 	float _Pitch;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly)
 	float _Roll;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly)
 	float _Direction;
 
-	// 열거체 사용을 위해 CCharacter.h 포함하면 성능상에 문제가 있을까? 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
-	ECharacterWeaponAnimationType _WeaponAnimationType;
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly)
 	bool _BInAir;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly)
 	bool _BAccelerating;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly)
 	float _GunIdlePlayRate = 1.0f;
+
+	UPROPERTY(BlueprintReadOnly)
+	ECharacterWeaponAnimationType _WeaponAnimationType;
+
+	// IK본 변경
+	UPROPERTY(BlueprintReadOnly)
+	FIKRecoil _IKRecoil;
 
 // ******************************************************************************************************************
 // methods
 // ******************************************************************************************************************
 public:
-
+	void IKGunFireRecoilStart(FTransform InRecoilTransform);
+	void IKGunFireRecoilEnd();
 private:
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSconds) override;

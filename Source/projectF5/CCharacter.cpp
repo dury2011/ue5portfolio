@@ -18,21 +18,10 @@ ACCharacter::ACCharacter()
 
 	if (_BCamera)
 	{
-		_InGameUMGData->SetCharacterHp(_CharacterStats.Hp);
-		_InGameUMGData->SetCharacterMp(_CharacterStats.Mp);
-		_InGameUMGData->SetCharacterSp(_CharacterStats.Sp);
-
 		_CameraComponent = CreateDefaultSubobject<UCameraComponent>("Camera Component");
-		// below: https://forums.unrealengine.com/t/attaching-camera-to-head-socket/119911/3
+		// https://forums.unrealengine.com/t/attaching-camera-to-head-socket/119911/3
 		_CameraComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "head");
 	}
-
-
-	//// 임시: 캐릭터 소캣에다가 붙여줘야됨 코드 컴파일 확인하려고 임시 작성함
-	//if (_WeaponClass)
-	//{
-	//	_Weapon = Cast<ACWeapon>(SpawnCharacterUsingObjectActorClassOriented(_WeaponClass));
-	//}
 }
 
 void ACCharacter::Tick(float DeltaTime)
@@ -51,7 +40,8 @@ void ACCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		PlayerInputComponent->BindAxis(TEXT("VerticalLook"), this, &ACCharacter::VerticalLook);
 		PlayerInputComponent->BindAxis(TEXT("HorizontalLook"), this, &ACCharacter::HorizontalLook);
 
-		PlayerInputComponent->BindAction(TEXT("Action"), EInputEvent::IE_Pressed, this, &ACCharacter::Action);
+		PlayerInputComponent->BindAction(TEXT("OnAction"), EInputEvent::IE_Pressed, this, &ACCharacter::OnAction);
+		PlayerInputComponent->BindAction(TEXT("OffAction"), EInputEvent::IE_Released, this, &ACCharacter::OffAction);
 		PlayerInputComponent->BindAction(TEXT("Jump"), EInputEvent::IE_Pressed, this, &ACCharacter::Jump);
 		PlayerInputComponent->BindAction(TEXT("Crouch"), EInputEvent::IE_Pressed, this, &ACCharacter::Crouching);
 		PlayerInputComponent->BindAction(TEXT("Crawl"), EInputEvent::IE_Pressed, this, &ACCharacter::Crawl);
@@ -103,7 +93,12 @@ void ACCharacter::ViewChange()
 	
 }
 
-void ACCharacter::Action()
+void ACCharacter::OnAction()
+{
+
+}
+
+void ACCharacter::OffAction()
 {
 
 }
@@ -115,22 +110,21 @@ void ACCharacter::Jump()
 
 void ACCharacter::Crouching()
 {
-	//Super::Crouch();
-	//ACharacter에 있는 함수
-	//Crouch();
-	//_ActType = ECharacterActType::Crouch;
+
 }
 
 void ACCharacter::Crawl()
 {
-	//_ActType = ECharacterActType::Crawl;
+
 }
 
 void ACCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	//if(_SpringArmComponent) _SpringArmComponent->TargetArmLength = _CameraSpringArmLength;
+	//_InGameUMGData->SetCharacterHp(_CharacterStats.Hp);
+	//_InGameUMGData->SetCharacterMp(_CharacterStats.Mp);
+	//_InGameUMGData->SetCharacterSp(_CharacterStats.Sp);
 }
 
 ACWeapon* ACCharacter::SpawnCharacterUsingObject(TSubclassOf<class ACWeapon> InActorClass, FName InSpawnSocketName)

@@ -24,7 +24,7 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	FName _ADSSocketName = FName("ADS");
 
-	// https://unrealcommunity.wiki/timeline-in-cpp-1uktygtd Âü°í
+	// https://unrealcommunity.wiki/timeline-in-cpp-1uktygtd
 	struct AimTimeline
 	{
 		UPROPERTY()
@@ -44,8 +44,9 @@ protected:
 // ******************************************************************************************************
 public:
 	ACCharacterPlayer();
-	virtual void Tick(float DeltaTime) override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void Tick(float DeltaTime) override final;
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override final;
+
 private:
 	void Rifle();
 	void Pistol();
@@ -53,8 +54,12 @@ private:
 	void Grenade();
 	void OnAim();
 	void OffAim();
+	void FireSelect();
+	void Reload();
 	void AimTimelineUpdateCallback(float InterpValue);
+
 protected:
-	virtual void Action() override final;
-	virtual void BeginPlay() override;
+	virtual void OnAction() override final;
+	virtual void OffAction() override final;
+	virtual void BeginPlay() override final;
 };

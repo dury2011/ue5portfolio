@@ -3,14 +3,18 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "CCharacterAnimationinterface.h"
-#include "CInGameUMGinterface.h"
 #include "CWeaponGun.h"
 #include "CCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class ECharacterWeaponSlotType : uint8
+{
+	Rifle1 = 0, Pistol2, Knife3, Grenade4, Max
+};
 
 // Transform 조정은 블루프린트에서 함
 UCLASS()
-class PROJECTF5_API ACCharacter : public ACharacter, public ICCharacterAnimationinterface, public ICIngameUMGinterface
+class PROJECTF5_API ACCharacter : public ACharacter, public ICCharacterAnimationinterface
 {
 	GENERATED_BODY()
 // ******************************************************************************************************
@@ -18,15 +22,14 @@ class PROJECTF5_API ACCharacter : public ACharacter, public ICCharacterAnimation
 // ******************************************************************************************************
 public:
 private:
-
-	UPROPERTY()
-	class UCInGameUMGData* _InGameUMGData;
+	//UPROPERTY()
+	//class UCInGameUMGData* _InGameUMGData;
 
 protected:
 	// 캐릭터 스탯
 	struct Stats
 	{
-		int32 Level;
+		uint32 Level;
 		float Hp;
 		float Mp;
 		float Sp;
@@ -37,6 +40,7 @@ protected:
 		// Aim 중에 무기 변경 금지
 		bool BAiming;
 		ECharacterWeaponSlotType CurrentWeaponSlotType = ECharacterWeaponSlotType::Max;
+		//ECharacterWeaponFireSelectorType CurrentWeaponFireSelectorType = ECharacterWeaponFireSelectorType::Max;
 		TArray<class ACWeapon*> Weapons;
 	} _CharacterWeaponSlot;
 
@@ -70,8 +74,6 @@ public:
 	// 캐릭터 애니메이션 인터페이스 재정의
 	FORCEINLINE virtual ECharacterWeaponAnimationType GetCharacterWeaponAnimationType() override { return _CharacterAnimation.WeaponAnimationType; }
 	FORCEINLINE virtual float GetGunIdleAnimationPlayRate() override { return _CharacterAnimation.GunIdleAnimationPlayRate; }
-	// 인게임 UMG 데이터 인터페이스 재정의
-	FORCEINLINE virtual UCInGameUMGData* GetInGameUMGData() override { return _InGameUMGData; }
 
 private:
 	void ViewChange();
@@ -81,7 +83,8 @@ private:
 	void HorizontalLook(float axisValue);
 
 protected:
-	virtual void Action();
+	virtual void OnAction();
+	virtual void OffAction();
 	virtual void Jump();
 	virtual void Crouching();
 	virtual void Crawl();

@@ -19,3 +19,7 @@ void ACProjectile::Tick(float DeltaTime)
 
 }
 
+void ACProjectile::SetProjectileLifeSpan(float InLifeSpan)
+{
+	SetLifeSpan(InLifeSpan);
+}

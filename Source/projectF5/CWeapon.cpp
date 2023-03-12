@@ -24,14 +24,19 @@ void ACWeapon::AttachWeaponUsingObject(class USceneComponent* InAttachComponent,
 	InAttachComponent->AttachToComponent(_SkeletalMeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, InAttachSocketName);
 }
 
+void ACWeapon::StartAbility()
+{
+
+}
+
+void ACWeapon::EndAbility()
+{
+
+}
+
 void ACWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	
 	if (GetOwner()) _Owner = Cast<ACharacter>(GetOwner());
-}
-
-void ACWeapon::Attack()
-{
-
 }

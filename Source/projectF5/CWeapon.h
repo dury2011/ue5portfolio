@@ -13,7 +13,7 @@ class PROJECTF5_API ACWeapon : public AActor
 // properties
 // ******************************************************************************************************
 public:
-private:
+private:	
 protected:
 	UPROPERTY(BlueprintReadOnly)
 	class ACharacter* _Owner;
@@ -30,9 +30,10 @@ public:
 	ACWeapon();
 	virtual void Tick(float DeltaTime) override;
 	void AttachWeaponUsingObject(class USceneComponent* InAttachComponent, FName InAttachSocketName);
+	virtual void StartAbility(); 
+	virtual void EndAbility();
 private:
 
 protected:
 	virtual void BeginPlay() override;
-	virtual void Attack(); 
 };

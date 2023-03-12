@@ -32,4 +32,30 @@ void UCAnimInstance_Character::NativeUpdateAnimation(float DeltaSeconds)
 	if (_AnimationInterface == NULL) return;
 	_WeaponAnimationType = _AnimationInterface->GetCharacterWeaponAnimationType();
 	_GunIdlePlayRate = _AnimationInterface->GetGunIdleAnimationPlayRate();
+
+	if (_IKRecoil.BApplyRecoil)
+	{
+	_IKRecoil.Recoil = UKismetMathLibrary::TInterpTo(_IKRecoil.Recoil, _IKRecoil.TotalRecoil, DeltaSeconds, 15.0f);
+	UE_LOG(LogTemp, Warning, TEXT("IKReCoil.Recoil.Location.X: %f"), _IKRecoil.Recoil.GetLocation().X);
+	UE_LOG(LogTemp, Warning, TEXT("IKReCoil.Recoil.Location.X: %f"), _IKRecoil.Recoil.GetLocation().Y);
+	UE_LOG(LogTemp, Warning, TEXT("IKReCoil.Recoil.Location.X: %f"), _IKRecoil.Recoil.GetLocation().Z);
+	}
+	else if (!UKismetMathLibrary::NearlyEqual_TransformTransform(_IKRecoil.Recoil, _IKRecoil.EmptyTransform, 0.005f, 0.005f, 0.005f))
+	{
+	_IKRecoil.Recoil = UKismetMathLibrary::TInterpTo(_IKRecoil.Recoil, _IKRecoil.EmptyTransform, DeltaSeconds, 7.0f);
+	UE_LOG(LogTemp, Warning, TEXT("IKReCoil.Recoil.Location.X: %f"), _IKRecoil.Recoil.GetLocation().X);
+	UE_LOG(LogTemp, Warning, TEXT("IKReCoil.Recoil.Location.X: %f"), _IKRecoil.Recoil.GetLocation().Y);
+	UE_LOG(LogTemp, Warning, TEXT("IKReCoil.Recoil.Location.X: %f"), _IKRecoil.Recoil.GetLocation().Z);
+	}
 }
+
+void UCAnimInstance_Character::IKGunFireRecoilStart(FTransform InRecoilTransform)
+{
+	_IKRecoil.TotalRecoil =_IKRecoil.Recoil * InRecoilTransform;
+	_IKRecoil.BApplyRecoil = true;
+};
+
+void UCAnimInstance_Character::IKGunFireRecoilEnd()
+{
+	_IKRecoil.BApplyRecoil = false;
+};

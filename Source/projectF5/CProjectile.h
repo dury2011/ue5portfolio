@@ -12,6 +12,9 @@ class PROJECTF5_API ACProjectile : public AActor
 // properties
 // ******************************************************************************************************	
 public:
+	UPROPERTY(EditDefaultsOnly)
+	float _ProjectileLifeSpan = 3.0f;
+
 private:
 	UPROPERTY(EditDefaultsOnly)
 	class UProjectileMovementComponent* _ProjectileComponent;
@@ -25,6 +28,7 @@ protected:
 public:	
 	ACProjectile();
 	virtual void Tick(float DeltaTime) override;
+	void SetProjectileLifeSpan(float InLifeSpan);
 private:
 
 protected:
