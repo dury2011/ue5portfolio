@@ -2,6 +2,7 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/TimelineComponent.h"
+#include "CAnimInstance_Character.h"
 
 ACCharacterPlayer::ACCharacterPlayer()
 {
@@ -117,11 +118,19 @@ void ACCharacterPlayer::OnAim()
 		if (!_CharacterWeaponSlot.BAiming)
 		{
 			_CharacterWeaponSlot.BAiming = true;
-			_CharacterAnimation.GunIdleAnimationPlayRate = 0.0f;
+			//_CharacterAnimation.GunIdleAnimationPlayRate = 0.0f;
 			_AimTimeline.AimTimeline->Play();
 			_CameraComponent->SetFieldOfView(UKismetMathLibrary::Lerp(45.0f, 90.0f, _AimTimeline.InterpFloat));
 			// 임시 무기마다 달라야 
-			_CharacterWeaponSlot.Weapons[(uint8)ECharacterWeaponSlotType::Rifle1]->AttachWeaponUsingObject(_CameraComponent, _ADSSocketName);/*AttachToComponent(_CameraComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, _RifleADSSocketName);*/
+			//_CharacterWeaponSlot.Weapons[(uint8)ECharacterWeaponSlotType::Rifle1]->AttachWeaponUsingObject(_CameraComponent, _ADSSocketName);/*AttachToComponent(_CameraComponent, FAttachmentTransformRules::SnapToTargetIncludingScale, _RifleADSSocketName);*/
+			
+			UCAnimInstance_Character* _animInstance = Cast<UCAnimInstance_Character>(GetMesh()->GetAnimInstance());
+			if (_animInstance)
+			{
+				_animInstance->GetIKAim().SetAimSocket(_IKHandGunSocketName, Cast<ACWeaponGun>(_CharacterWeaponSlot.Weapons[(uint8)ECharacterWeaponSlotType::Rifle1])->_MuzzleSocketName);
+				_animInstance->GetIKAim().SetAimPoint(_IKHandRootSocketName);
+			}
+		
 		}
 	}
 }
@@ -134,10 +143,10 @@ void ACCharacterPlayer::OffAim()
 		if (_CharacterWeaponSlot.BAiming)
 		{
 			_CharacterWeaponSlot.BAiming = false;
-			_CharacterAnimation.GunIdleAnimationPlayRate = 1.0f;
+			//_CharacterAnimation.GunIdleAnimationPlayRate = 1.0f;
 			_AimTimeline.AimTimeline->Play();
 			_CameraComponent->SetFieldOfView(UKismetMathLibrary::Lerp(90.0f, 45.0f, _AimTimeline.InterpFloat));
-			_CameraComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "head");
+			//_CameraComponent->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "head");
 			_CameraComponent->SetRelativeRotation(FRotator(-100.0f, 0.0f, 75.0f));
 		}
 	}
@@ -170,6 +179,8 @@ void ACCharacterPlayer::OnAction()
 	
 	if (_CharacterWeaponSlot.CurrentWeaponSlotType != ECharacterWeaponSlotType::Max)
 	_CharacterWeaponSlot.Weapons[(uint8)_CharacterWeaponSlot.CurrentWeaponSlotType]->StartAbility();
+	//if (_CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Rifle1 && _WeaponGunFireAnimMontage)
+	//GetMesh()->GetAnimInstance()->Montage_Play(_WeaponGunFireAnimMontage, 0.0f);
 }
 
 void ACCharacterPlayer::OffAction()
@@ -178,6 +189,8 @@ void ACCharacterPlayer::OffAction()
 
 	if (_CharacterWeaponSlot.CurrentWeaponSlotType != ECharacterWeaponSlotType::Max)
 	_CharacterWeaponSlot.Weapons[(uint8)_CharacterWeaponSlot.CurrentWeaponSlotType]->EndAbility();
+	//if (_CharacterWeaponSlot.CurrentWeaponSlotType == ECharacterWeaponSlotType::Rifle1 && _WeaponGunFireAnimMontage)
+	//GetMesh()->GetAnimInstance()->Montage_Stop(0.0f);
 }
 
 void ACCharacterPlayer::BeginPlay()

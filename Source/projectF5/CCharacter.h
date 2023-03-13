@@ -13,6 +13,10 @@ enum class ECharacterWeaponSlotType : uint8
 };
 
 // Transform 조정은 블루프린트에서 함
+
+// Idle 중 Aim의 경우는 에니메이션 멈추게 하였는데 아님
+// Rifle, Pistol공격 중에는 무조건 spine_01 위의 에니메이션 동작은 고정되도록 수정
+// 나머지 동작에 관하여는 전혀 상관없음
 UCLASS()
 class PROJECTF5_API ACCharacter : public ACharacter, public ICCharacterAnimationinterface
 {
@@ -74,6 +78,8 @@ public:
 	// 캐릭터 애니메이션 인터페이스 재정의
 	FORCEINLINE virtual ECharacterWeaponAnimationType GetCharacterWeaponAnimationType() override { return _CharacterAnimation.WeaponAnimationType; }
 	FORCEINLINE virtual float GetGunIdleAnimationPlayRate() override { return _CharacterAnimation.GunIdleAnimationPlayRate; }
+	FORCEINLINE UCameraComponent* GetCameraComponent() { return _CameraComponent; }
+	FORCEINLINE ACWeapon* GetWeapon() { return _CharacterWeaponSlot.Weapons[(uint8)_CharacterWeaponSlot.CurrentWeaponSlotType]; }
 
 private:
 	void ViewChange();

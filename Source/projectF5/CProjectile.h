@@ -29,6 +29,7 @@ public:
 	ACProjectile();
 	virtual void Tick(float DeltaTime) override;
 	void SetProjectileLifeSpan(float InLifeSpan);
+	virtual void ShootProjectileToCrosshairDirection(const FVector& InDirection);
 private:
 
 protected:

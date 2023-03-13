@@ -5,7 +5,7 @@
 
 ACWeapon::ACWeapon()
 {
- 	PrimaryActorTick.bCanEverTick = false;
+ 	PrimaryActorTick.bCanEverTick = true;
 
 	//_CapsuleComponent = CreateDefaultSubobject<UCapsuleComponent>("CapsuleComponent");
 	//RootComponent = _CapsuleComponent;

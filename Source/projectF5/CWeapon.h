@@ -18,7 +18,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	class ACharacter* _Owner;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	class USkeletalMeshComponent* _SkeletalMeshComponent;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -32,6 +32,7 @@ public:
 	void AttachWeaponUsingObject(class USceneComponent* InAttachComponent, FName InAttachSocketName);
 	virtual void StartAbility(); 
 	virtual void EndAbility();
+	FORCEINLINE USkeletalMeshComponent* GetSkeletalMeshComponent() { return _SkeletalMeshComponent; }
 private:
 
 protected:

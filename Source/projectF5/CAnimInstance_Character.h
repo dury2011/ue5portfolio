@@ -9,18 +9,44 @@ USTRUCT(BlueprintType)
 struct FIKRecoil
 {
 	GENERATED_BODY()
-
+public:
 	UPROPERTY(BlueprintReadOnly)
-	bool BApplyRecoil = true;
+	bool BApplyRecoil = false;
 
 	UPROPERTY(BlueprintReadOnly)
 	FTransform Recoil;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY()
 	FTransform TotalRecoil;
 
+	UPROPERTY()
+	FTransform EmptyTransform;
+
+	void IKGunFireRecoilStart(FTransform InRecoilTransform);
+	void IKGunFireRecoilEnd();
+	bool GetBApplyRecoil() { return BApplyRecoil; }
+};
+
+USTRUCT(BlueprintType)
+struct FIKAim
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+	class ACharacter* Aimer;
+
 	UPROPERTY(BlueprintReadOnly)
-	FTransform EmptyTransform {FRotator::ZeroRotator, FVector3d::ZeroVector, FVector3d(1.0f, 1.0f, 1.0f) };
+	FVector AimSocketLocation;
+
+	UPROPERTY(BlueprintReadOnly)
+	FRotator AimSocketRotation;
+
+	UPROPERTY(BlueprintReadOnly)
+	FVector AimPointLocation;
+
+	//https://www.youtube.com/watch?v=9PJ_-8ZuWsc&list=PLzykqv-wgIQXz6qLDE-wswVJ7pEH9ziKx&index=9
+	void SetAimSocket(FName InIKHandSocketName, FName InWeaponAimSocketName);
+	void SetAimPoint(FName InIKHandRootName);
 };
 
 UCLASS()
@@ -66,16 +92,21 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	ECharacterWeaponAnimationType _WeaponAnimationType;
 
-	// IK본 변경
+	// 무기 반동으로 인한 IK본 변경
 	UPROPERTY(BlueprintReadOnly)
 	FIKRecoil _IKRecoil;
+
+	// 무기 aim으로 인한 IK 본 변경
+	UPROPERTY(BlueprintReadOnly)
+	FIKAim _IKAim;
 
 // ******************************************************************************************************************
 // methods
 // ******************************************************************************************************************
 public:
-	void IKGunFireRecoilStart(FTransform InRecoilTransform);
-	void IKGunFireRecoilEnd();
+	FORCEINLINE FIKAim& GetIKAim() { return _IKAim; }
+	FORCEINLINE FIKRecoil& GetIKRecoil() { return _IKRecoil; }
+
 private:
 	virtual void NativeBeginPlay() override;
 	virtual void NativeUpdateAnimation(float DeltaSconds) override;

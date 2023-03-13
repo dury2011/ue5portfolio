@@ -23,3 +23,8 @@ void ACProjectile::SetProjectileLifeSpan(float InLifeSpan)
 {
 	SetLifeSpan(InLifeSpan);
 }
+
+void ACProjectile::ShootProjectileToCrosshairDirection(const FVector& InDirection)
+{
+	_ProjectileComponent->Velocity = InDirection * _ProjectileComponent->InitialSpeed;
+}

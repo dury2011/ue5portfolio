@@ -14,6 +14,11 @@ class PROJECTF5_API ACCharacterPlayer : public ACCharacter
 // properties
 // ******************************************************************************************************
 public:
+	UPROPERTY(EditDefaultsOnly)
+	FName _IKHandGunSocketName = FName("ik_hand_gun");
+
+	UPROPERTY(EditDefaultsOnly)
+	FName _IKHandRootSocketName = FName("ik_hand_root");
 private:
 	UPROPERTY(EditDefaultsOnly)
 	FName _RifleHolsterSocketName = FName("RifleHolster");
@@ -22,7 +27,7 @@ private:
 	FName _RifleEquipSocketName = FName("RifleEquip");
 
 	UPROPERTY(EditDefaultsOnly)
-	FName _ADSSocketName = FName("ADS");
+	class UAnimMontage* _WeaponRifleFireAnimMontage;
 
 	// https://unrealcommunity.wiki/timeline-in-cpp-1uktygtd
 	struct AimTimeline
@@ -46,6 +51,7 @@ public:
 	ACCharacterPlayer();
 	virtual void Tick(float DeltaTime) override final;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override final;
+	FORCEINLINE UAnimMontage* GetRifleFireAnimMontage() { return _WeaponRifleFireAnimMontage; }
 
 private:
 	void Rifle();
