@@ -2,40 +2,48 @@
 
 #include "CoreMinimal.h"
 #include "CWeapon.h"
-//#include "TimerManager.h"
+#include "Components/TimelineComponent.h"
 #include "CWeaponGun.generated.h"
 
 UENUM(BlueprintType)
-enum class ECharacterWeaponFireSelectorType : uint8
+enum class EWeaponGunFireSelectorType : uint8
 {
 	SemiAuto = 0, FullAuto, Max
 };
 
+UENUM(BlueprintType)
+enum class EWeaponGunStateType : uint8
+{
+	Idle = 0, Fire, Max
+};
+
+UENUM(BlueprintType)
+enum class EWeaponGunAmmoCountType : uint8
+{
+	OutAmmo = 0, FullAmmo, Max
+};
+
+// 타임라인을 사용한 반동 구현이 커브를 사용하므로 Randomfloat보다 좀 더 정밀한 반동 구현이 가능한 것 같음. 
+// https://www.youtube.com/watch?v=3Iyf5whKWWI&list=PLfCrVJxHeD5Yjegzox9g_9oFK5OH6YRRo&index=4
 USTRUCT(BlueprintType)
-struct FRecoilInput
+struct FRecoilTimeline
 {
 	GENERATED_BODY()
-private:
-	UPROPERTY(EditDefaultsOnly, Category = "Max Rotation")
-	float MinRecoilRollInput = 0.0f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Max Rotation")
-	float MaxRecoilRollInput = 0.0f;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Min Rotation")
-	float MinRecoilYawInput = 0.0f;
+	UPROPERTY()
+	FTimeline RecoilTimeline;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Max Rotation")
-	float MaxRecoilYawInput = 0.0f;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Min Rotation")
-	float MinRecoilPitchInput = 0.0f;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Max Rotation")
-	float MaxRecoilPitchInput = 0.0f;
+	UPROPERTY(EditDefaultsOnly)
+	class UCurveVector* RecoilCurve;
 
-public:
-	FTransform MakeRandomRecoilInputTransform();
+	UPROPERTY(EditDefaultsOnly)
+	float RecoilSpeed = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly)
+	float RecoilRecoverSpeed = 15.0f;
+	
+	UPROPERTY()
+	FVector InterpVector;
 };
 
 UCLASS()
@@ -46,41 +54,56 @@ class PROJECTF5_API ACWeaponGun : public ACWeapon
 // properties
 // ******************************************************************************************************
 public:
-	UPROPERTY(BlueprintReadOnly)
-	ECharacterWeaponFireSelectorType _FireSelectorType = ECharacterWeaponFireSelectorType::FullAuto;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	FName _MuzzleSocketName = FName("MuzzleFlash_Socket");
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FName _MuzzleSocketName;
+	FName _ChamberSocketName = FName("BulletShell_Socket");
 
 	UPROPERTY(EditDefaultsOnly)
 	FName _ADSSocketName = FName("AimSocket");
+
+	struct WeaponGunInfo
+	{
+		
+		UPROPERTY()
+		EWeaponGunFireSelectorType FireSelectorType = EWeaponGunFireSelectorType::FullAuto;
+		UPROPERTY()
+		EWeaponGunStateType GunStateType = EWeaponGunStateType::Idle;
+		UPROPERTY()
+		EWeaponGunAmmoCountType GunAmmoCountType = EWeaponGunAmmoCountType::FullAmmo;
+		UPROPERTY()
+		bool BFiring = false;
+
+	}_WeaponGunInfo;
+
 private:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<class ACProjectile> _ProjectileClass;
 
 	UPROPERTY(EditDefaultsOnly)
 	class UAnimMontage* _WeaponFireAnimMontage;
-	
-	UPROPERTY(EditDefaultsOnly)
-	float _BulletFirePosition = 50.0f;
 
 	UPROPERTY(EditDefaultsOnly)
 	uint8 _FullAmmo = 30;
 
 	UPROPERTY(EditDefaultsOnly)
 	float _FullAutoFiringInterval = 0.2f;
-	UPROPERTY()
-	class ACProjectile* _Projectile;
+
+	UPROPERTY(EditDefaultsOnly)
+	float _ShootProjectileCameraLength = 50.0f;
+	
+	UPROPERTY(EditDefaultsOnly)
+	FRecoilTimeline _RecoilTimeline;
 	
 	UPROPERTY()
-	class UCameraComponent* _OwnerCamera;
+	class ACProjectile* _Projectile;
 
 	UPROPERTY()
 	class ACCharacterPlayer* _OwnerCharacterPlayer;
-
-	//https://www.youtube.com/watch?v=wW8MjEfsZ78&list=PLzykqv-wgIQXz6qLDE-wswVJ7pEH9ziKx&index=11
-	UPROPERTY(EditDefaultsOnly)
-	FRecoilInput _GunRecoilInput;
+	
+	UPROPERTY()
+	class UCameraComponent* _OwnerCamera;
 
 	UPROPERTY()
 	FTimerHandle _FullAutoTimerHandle;
@@ -88,13 +111,6 @@ private:
 	UPROPERTY()
 	uint8 _LeftAmmo = _FullAmmo;
 
-	struct ProjectileRecoil
-	{
-		bool BRecoil = false;
-		FTransform Recoil;
-		FTransform TotalRecoil;
-	} _ProjectileRecoil;
-	
 protected:
 // ******************************************************************************************************
 // methods
@@ -106,14 +122,19 @@ public:
 	virtual void EndAbility() override final;
 	void Reload();
 	
+	// Bind함수는 반드시 UFUNCTION 메크로 사용해야한다. 
+	UFUNCTION()
+	void RecoilTimelineUpdateCallback(FVector InVector);
+
 private:
 	void FireLogic();
-	void RecoilLogic();
-	//void ProjectileGunFireRecoil(FTransform InRecoilTransform);
+	void RecoilLogic(FVector InVector);
+	void RecoilRecoverLogic(FVector InVector);
 
 protected:
 	virtual void BeginPlay() override final;
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void VFXGunFire();
+
 };

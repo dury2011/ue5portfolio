@@ -7,14 +7,16 @@
 #include "CIteminterface.h"
 #include "CWeapon.h"
 #include "CInGameUMGData.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 
 ACCharacter::ACCharacter()
-	: _CharacterStats{ 0, 100.0f, 100.0f, 100.0f }, 
+	: _CharacterStat{ 0, 1000.0f, 1000.0f, 1000.0f }, 
 	_BCamera(true)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	RootComponent = GetCapsuleComponent();
 	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &ACCharacter::BeginOverlap);
+	OnTakePointDamage.AddDynamic(this, &ACCharacter::DamagedPoint);
 
 	if (_BCamera)
 	{
@@ -55,7 +57,7 @@ void ACCharacter::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 	if (_itemInterface) 
 	{ 
 		UE_LOG(LogTemp, Warning, TEXT("Function Called: %s"), *FString("ACCharacter::TriggerBeginOverlap()")); 
-		_CharacterStats.Hp += _itemInterface->ActivateItemAbility(); 
+		_CharacterStat.Hp += _itemInterface->ActivateItemAbility(); 
 	}	
 }
 
@@ -117,6 +119,58 @@ void ACCharacter::Crawl()
 {
 
 }
+
+//https://hannom.tistory.com/200
+void ACCharacter::DamagedPoint(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser)
+{	
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Blue, FString::Printf(TEXT("Damage %f"), Damage));
+	}
+
+	_CharacterStat.Hp -= Damage;
+
+	// 임시
+	if (_CharacterStat.Hp <= 0)
+	{
+		GetMesh()->SetSimulatePhysics(true);
+		SetLifeSpan(5.0f);
+	}
+		
+	UE_LOG(LogTemp, Warning, TEXT("ACCharacter::DamagedPoint Called!"));
+	//FPointDamageEvent* const _pointDamageE = (FPointDamageEvent*)&DamageEvent;
+	//// 비 const 참조에 대한 초기값은 R-Value여야 합니다. 
+	//const auto& _surfaceType = _pointDamageE->HitInfo.PhysMaterial.Get()->SurfaceType.GetValue();
+	//// 1:head, 2:body, 3:amrs, 4:legs
+	//switch (_surfaceType)
+	//{
+	//	case SurfaceType1:
+	//	{
+	//		_CharacterStat.Hp -= _finalDamage * 2;
+	//		break;
+	//	}
+	//	case SurfaceType2:
+	//	{
+	//		_CharacterStat.Hp -= _finalDamage;
+	//		break;
+	//	}
+	//	case SurfaceType3:
+	//	{
+	//		_CharacterStat.Hp -= _finalDamage / 2.0f;
+	//		break;
+	//	}
+	//	case SurfaceType4:
+	//	{
+	//		_CharacterStat.Hp -= _finalDamage / 3.0f;
+	//		break;
+	//	}
+	//}
+}
+
+//void ACCharacter::ReceivePointDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser)
+//{
+//
+//}
 
 void ACCharacter::BeginPlay()
 {

@@ -29,6 +29,9 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	class UAnimMontage* _WeaponRifleFireAnimMontage;
 
+	UPROPERTY()
+	class UCInGameUMGData* _InGameUMGData;
+
 	// https://unrealcommunity.wiki/timeline-in-cpp-1uktygtd
 	struct AimTimeline
 	{
@@ -46,7 +49,7 @@ private:
 protected:
 // ******************************************************************************************************
 // methods
-// ******************************************************************************************************
+// ******************************************************************************************************ssss
 public:
 	ACCharacterPlayer();
 	virtual void Tick(float DeltaTime) override final;
@@ -67,5 +70,7 @@ private:
 protected:
 	virtual void OnAction() override final;
 	virtual void OffAction() override final;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override final;
+	// virtual void ReceivePointDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser) override final;
 	virtual void BeginPlay() override final;
 };

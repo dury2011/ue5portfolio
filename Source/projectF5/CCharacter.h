@@ -37,7 +37,7 @@ protected:
 		float Hp;
 		float Mp;
 		float Sp;
-	} _CharacterStats;
+	} _CharacterStat;
 
 	struct WeaponSlot
 	{
@@ -94,6 +94,10 @@ protected:
 	virtual void Jump();
 	virtual void Crouching();
 	virtual void Crawl();
+	UFUNCTION()
+	virtual void DamagedPoint(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser);
+	// AActor의 함수는 BlueprintInplementableEvent, AActor에만 있음, 델리게이트로 콜백해야
+	/*virtual void ReceivePointDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser);*/
 	virtual void BeginPlay() override;
 	UFUNCTION() // AddDynamic에 함수를 바인딩할 경우 해당 함수는 반드시 UFUNCTION() 메크로를 사용해야, 안해도 에러는 발생X, 하지만 작동은 안함
 	virtual void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

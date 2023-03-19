@@ -3,6 +3,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Components/TimelineComponent.h"
 #include "CAnimInstance_Character.h"
+#include "CInGameUMGData.h"
 
 ACCharacterPlayer::ACCharacterPlayer()
 {
@@ -11,6 +12,7 @@ ACCharacterPlayer::ACCharacterPlayer()
 	static ConstructorHelpers::FObjectFinder<UCurveFloat> _curve(TEXT("CurveFloat'/Game/Etc/AimCurve.AimCurve'"));
 	check(_curve.Succeeded())
 	_AimTimeline.AimCurve = _curve.Object;
+
 }
 
 void ACCharacterPlayer::Tick(float DeltaTime)
@@ -129,8 +131,7 @@ void ACCharacterPlayer::OnAim()
 			{
 				_animInstance->GetIKAim().SetAimSocket(_IKHandGunSocketName, Cast<ACWeaponGun>(_CharacterWeaponSlot.Weapons[(uint8)ECharacterWeaponSlotType::Rifle1])->_MuzzleSocketName);
 				_animInstance->GetIKAim().SetAimPoint(_IKHandRootSocketName);
-			}
-		
+			}		
 		}
 	}
 }
@@ -159,11 +160,11 @@ void ACCharacterPlayer::FireSelect()
 		ACWeaponGun* _rifle = Cast<ACWeaponGun>(_CharacterWeaponSlot.Weapons[(uint8)ECharacterWeaponSlotType::Rifle1]);
 		if (_rifle)
 		{
-			if (_rifle->_FireSelectorType == ECharacterWeaponFireSelectorType::SemiAuto)
-			_rifle->_FireSelectorType = ECharacterWeaponFireSelectorType::FullAuto;
-			else _rifle->_FireSelectorType = ECharacterWeaponFireSelectorType::SemiAuto;
+			if (_rifle->_WeaponGunInfo.FireSelectorType == EWeaponGunFireSelectorType::SemiAuto)
+			_rifle->_WeaponGunInfo.FireSelectorType = EWeaponGunFireSelectorType::FullAuto;
+			else _rifle->_WeaponGunInfo.FireSelectorType = EWeaponGunFireSelectorType::SemiAuto;
 		}
-		UE_LOG(LogTemp, Warning, TEXT("FireSelector: %d"), (uint8)_rifle->_FireSelectorType);
+		UE_LOG(LogTemp, Warning, TEXT("FireSelector: %d"), (uint8)_rifle->_WeaponGunInfo.FireSelectorType);
 	}
 }
 
@@ -193,6 +194,35 @@ void ACCharacterPlayer::OffAction()
 	//GetMesh()->GetAnimInstance()->Montage_Stop(0.0f);
 }
 
+float ACCharacterPlayer::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser)
+{
+	float _finalDamage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	return _finalDamage;
+	//if (ActorHasTag(FName("BulletEnemy")))
+	//{
+	//	auto _pointDamageEvent = Cast<FPointDamageEvent>(&DamageEvent);
+	//	FName _hitBoneName = _pointDamageEvent->HitInfo.BoneName;
+
+	//	if (_hitBoneName.Compare(FName("head")))
+	//	{
+	//		_CharacterStat.Hp = _CharacterStat.Hp - (_finalDamage * 2);
+
+	//	}
+	//	
+	//	_CharacterStat.Hp -= DamageAmount;
+	//}
+	//else if (ActorHasTag(FName("BulletFirend"))) return;
+}
+
+//void ACCharacterPlayer::ReceivePointDamage(AActor* DamagedActor, float Damage, class AController* InstigatedBy, FVector HitLocation, class UPrimitiveComponent* FHitComponent, FName BoneName, FVector ShotFromDirection, const class UDamageType* DamageType, AActor* DamageCauser)
+//{
+//	Super::ReceivePointDamage(DamagedActor, Damage, InstigatedBy, HitLocation, FHitComponent, BoneName, ShotFromDirection, DamageType, DamageCauser);
+//
+//	
+//	UE_LOG(LogTemp, Warning, TEXT("Damage: %f"), _damageDebug);
+//}
+
 void ACCharacterPlayer::BeginPlay()
 {
 	Super::BeginPlay();
@@ -214,6 +244,9 @@ void ACCharacterPlayer::BeginPlay()
 			_CharacterWeaponSlot.Weapons[(uint8)ECharacterWeaponSlotType::Rifle1]->SetOwner(this);
 		}
 	}
+
+	//_InGameUMGData->SetCharacterHp(_CharacterStat.Hp);
+	//_InGameUMGData->SetCurrentWeaponSlotType(_CharacterWeaponSlot.CurrentWeaponSlotType);
 }
 
 void ACCharacterPlayer::AimTimelineUpdateCallback(float InterpValue)

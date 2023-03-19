@@ -58,7 +58,7 @@ void UCAnimInstance_Character::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
-	if (_AnimInstanceOwner == NULL) return;
+	if (!_AnimInstanceOwner) return;
 	_BInAir = _AnimInstanceOwner->GetMovementComponent()->IsFalling();
 	_Speed = _AnimInstanceOwner->GetVelocity().Size2D();
 	_Yaw = UKismetMathLibrary::NormalizedDeltaRotator(_AnimInstanceOwner->GetBaseAimRotation(), _AnimInstanceOwner->GetActorRotation()).Yaw;

@@ -6,13 +6,12 @@
 #include "Camera/CameraComponent.h"
 #include "CCharacterPlayer.h"
 
-FTransform FRecoilInput::MakeRandomRecoilInputTransform()
+void ACWeaponGun::RecoilTimelineUpdateCallback(FVector InVector)
 {
-	float _randPitch = UKismetMathLibrary::RandomFloatInRange(MinRecoilPitchInput, MaxRecoilPitchInput);
-	float _randYaw = UKismetMathLibrary::RandomFloatInRange(MinRecoilYawInput, MaxRecoilYawInput);
-	float _randRoll = UKismetMathLibrary::RandomFloatInRange(MinRecoilRollInput, MaxRecoilRollInput);
-	
-	return UKismetMathLibrary::MakeTransform(FVector(0.0f, 0.0f, 0.0f), FRotator(_randPitch, _randYaw, _randRoll));
+	if (_WeaponGunInfo.BFiring)
+		RecoilLogic(InVector);
+	else
+		RecoilRecoverLogic(InVector);
 }
 
 ACWeaponGun::ACWeaponGun()
@@ -25,7 +24,7 @@ void ACWeaponGun::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	RecoilLogic();
+	_RecoilTimeline.RecoilTimeline.TickTimeline(DeltaTime);
 }
 
 void ACWeaponGun::BeginPlay()
@@ -37,22 +36,34 @@ void ACWeaponGun::BeginPlay()
 		_OwnerCamera = Cast<ACCharacter>(_Owner)->GetCameraComponent();
 		_OwnerCharacterPlayer = Cast<ACCharacterPlayer>(_Owner);
 	}
+	if (_RecoilTimeline.RecoilCurve)
+	{
+		FOnTimelineVector _onFullAutoRecoilTimelineCallback;
+		
+		_onFullAutoRecoilTimelineCallback.BindUFunction(this, FName("RecoilTimelineUpdateCallback"));
+		_RecoilTimeline.RecoilTimeline.AddInterpVector(_RecoilTimeline.RecoilCurve, _onFullAutoRecoilTimelineCallback);
+		_RecoilTimeline.RecoilTimeline.SetPropertySetObject(this);
+		_RecoilTimeline.RecoilTimeline.SetTimelineLength(5.0f);
+	}
 }
 
 void ACWeaponGun::StartAbility()
 {
 	Super::StartAbility();
 	
-	if (_LeftAmmo <= 0) return;
+	_WeaponGunInfo.BFiring = true;
+	
+	_RecoilTimeline.RecoilTimeline.SetPlayRate(_RecoilTimeline.RecoilSpeed);
+	_RecoilTimeline.RecoilTimeline.Play();
 
-	switch (_FireSelectorType)
+	switch (_WeaponGunInfo.FireSelectorType)
 	{
-		case ECharacterWeaponFireSelectorType::SemiAuto:
+		case EWeaponGunFireSelectorType::SemiAuto:
 		{
 			FireLogic();
 			break;
 		}
-		case ECharacterWeaponFireSelectorType::FullAuto:
+		case EWeaponGunFireSelectorType::FullAuto:
 		{
 			GetWorld()->GetTimerManager().SetTimer(_FullAutoTimerHandle, this, &ACWeaponGun::FireLogic, _FullAutoFiringInterval, true);
 			break;
@@ -66,12 +77,27 @@ void ACWeaponGun::EndAbility()
 {
 	Super::EndAbility();
 	
-	_ProjectileRecoil.BRecoil = false;
-	_ProjectileRecoil.TotalRecoil = UKismetMathLibrary::MakeTransform(FVector::ZeroVector, FRotator::ZeroRotator);
-	_ProjectileRecoil.Recoil = UKismetMathLibrary::MakeTransform(FVector::ZeroVector, FRotator::ZeroRotator);
+	_WeaponGunInfo.BFiring = false;
 
-	if (GetWorld()->GetTimerManager().IsTimerActive(_FullAutoTimerHandle))
-	GetWorld()->GetTimerManager().ClearTimer(_FullAutoTimerHandle);
+	_RecoilTimeline.RecoilTimeline.SetPlayRate(_RecoilTimeline.RecoilRecoverSpeed);
+	_RecoilTimeline.RecoilTimeline.Reverse();
+
+	//switch (_WeaponGunInfo.FireSelectorType)
+	//{
+	//	case EWeaponGunFireSelectorType::SemiAuto:
+	//	{
+	//		break;
+	//	}
+	//	case EWeaponGunFireSelectorType::FullAuto:
+	//	{	
+			if (GetWorld()->GetTimerManager().IsTimerActive(_FullAutoTimerHandle))
+			GetWorld()->GetTimerManager().ClearTimer(_FullAutoTimerHandle);
+
+	//		break;
+	//	}
+	//	default:
+	//		break;
+	//}
 }
 
 void ACWeaponGun::Reload()
@@ -83,59 +109,77 @@ void ACWeaponGun::Reload()
 // https://hyo-ue4study.tistory.com/324
 void ACWeaponGun::FireLogic()
 {
-	if (_LeftAmmo <= 0) return;
-	if (!_ProjectileClass) return;
-	if (!_Owner) return;
-	if (!_OwnerCharacterPlayer) return;
-	if (!_OwnerCamera) return;
+	// 예외처리
+	{
+		if (!_ProjectileClass) return;
+		if (!_Owner) return;
+		if (!_OwnerCharacterPlayer) return;
+		if (!_OwnerCamera) return;
+		if (_LeftAmmo <= 0) 
+		{ 
+			_WeaponGunInfo.BFiring = false; 
+			
+			_RecoilTimeline.RecoilTimeline.SetPlayRate(_RecoilTimeline.RecoilRecoverSpeed);
+			_RecoilTimeline.RecoilTimeline.Reverse();
 
-	_ProjectileRecoil.BRecoil = true;
-	_ProjectileRecoil.TotalRecoil = _ProjectileRecoil.Recoil + _GunRecoilInput.MakeRandomRecoilInputTransform();
+			if (GetWorld()->GetTimerManager().IsTimerActive(_FullAutoTimerHandle))
+				GetWorld()->GetTimerManager().ClearTimer(_FullAutoTimerHandle);
 
-	FTransform _ownerCamTrans = _OwnerCamera->GetComponentTransform();
+			return;
+		}
+	}
+
+	// Set FireRecoil
+	//_GunRecoilInput.BRecoil = true;
+	//_GunRecoilInput.TotalRecoil = _GunRecoilInput.Recoil * _GunRecoilInput.MakeRandomRecoilInputTransform();
 
 	// Play Montage
 	if (_WeaponFireAnimMontage && _OwnerCharacterPlayer->GetRifleFireAnimMontage())
 	{
-		_SkeletalMeshComponent->GetAnimInstance()->Montage_Play(_WeaponFireAnimMontage);
 		_OwnerCharacterPlayer->GetMesh()->GetAnimInstance()->Montage_Play(_OwnerCharacterPlayer->GetRifleFireAnimMontage());
+		_SkeletalMeshComponent->GetAnimInstance()->Montage_Play(_WeaponFireAnimMontage);
 	}
 
 	// Spawn Projectile
-	FActorSpawnParameters _params;
-	_params.Owner = this;
-	_params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-	_Projectile = GetWorld()->SpawnActor<ACProjectile>(_ProjectileClass, _SkeletalMeshComponent->GetSocketTransform(_MuzzleSocketName), _params);
-	
-	if (_Projectile)
 	{
-		_Projectile->ShootProjectileToCrosshairDirection(_OwnerCamera->GetForwardVector());
-		_Projectile->SetProjectileLifeSpan(_Projectile->_ProjectileLifeSpan);
-	}
-	
-	VFXGunFire();
-	
-	_LeftAmmo--;
+		FActorSpawnParameters _params;
+		_params.Owner = this;
+		_params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	UE_LOG(LogTemp, Warning, TEXT("LeftAmmo: %d"), _LeftAmmo);
+		FTransform _camTrans = _OwnerCamera->GetComponentTransform();
+		FVector _shootLoc = _camTrans.GetLocation() + FQuat(_camTrans.GetRotation()).GetForwardVector() * _ShootProjectileCameraLength;
+		FTransform _shootTrans = UKismetMathLibrary::MakeTransform(_shootLoc, FRotator(_camTrans.GetRotation()));
+
+		_Projectile = GetWorld()->SpawnActor<ACProjectile>(_ProjectileClass, _shootTrans/*_SkeletalMeshComponent->GetSocketTransform(_MuzzleSocketName)*/, _params);
+		
+		// Set Projectile Direction And LifeSpan
+		if (_Projectile)
+		{
+			_Projectile->SetOwner(_Owner);
+			FTransform _ownerCamTrans = _OwnerCamera->GetComponentTransform();
+			// 해보고 수정하던지 하기
+			_Projectile->ShootProjectileToCrosshairDirection(_OwnerCamera->GetForwardVector());
+			_LeftAmmo--;
+			UE_LOG(LogTemp, Warning, TEXT("LeftAmmo: %d"), _LeftAmmo);
+		}
+	}
+
+	// VFX Gun Fire
+	VFXGunFire();
 }
 
-void ACWeaponGun::RecoilLogic()
+void ACWeaponGun::RecoilLogic(FVector InVector)
 {
-	if (_LeftAmmo <= 0) return;
-	if (_ProjectileRecoil.BRecoil)
-	{
-		_ProjectileRecoil.Recoil = UKismetMathLibrary::TInterpTo(_ProjectileRecoil.Recoil, _ProjectileRecoil.TotalRecoil, GetWorld()->GetDeltaSeconds(), 1.0f);
-		_Owner->AddControllerPitchInput(_ProjectileRecoil.Recoil.Rotator().Pitch);
-		_Owner->AddControllerYawInput(_ProjectileRecoil.Recoil.Rotator().Yaw);
-		_Owner->AddControllerRollInput(_ProjectileRecoil.Recoil.Rotator().Roll);
-	}
-	//else
-	//else if (!UKismetMathLibrary::NearlyEqual_TransformTransform(_ProjectileRecoil.Recoil, _ProjectileRecoil.EmptyTransform, 0.005f, 0.005f, 0.005f))
-	//{
-	//	_ProjectileRecoil.Recoil = UKismetMathLibrary::TInterpTo(_ProjectileRecoil.Recoil, _ProjectileRecoil.EmptyTransform, GetWorld()->GetDeltaSeconds(), 7.0f);
-	//	_Owner->AddControllerPitchInput(_ProjectileRecoil.Recoil.Rotator().Pitch);
-	//	_Owner->AddControllerYawInput(_ProjectileRecoil.Recoil.Rotator().Yaw);
-	//	_Owner->AddControllerRollInput(_ProjectileRecoil.Recoil.Rotator().Roll);
-	//}
+	_RecoilTimeline.InterpVector = InVector * _RecoilTimeline.RecoilSpeed;
+	_Owner->AddControllerRollInput(_RecoilTimeline.InterpVector.X);
+	_Owner->AddControllerPitchInput(_RecoilTimeline.InterpVector.Y);
+	_Owner->AddControllerYawInput(_RecoilTimeline.InterpVector.Z);
+}
+
+void ACWeaponGun::RecoilRecoverLogic(FVector InVector)
+{
+	_RecoilTimeline.InterpVector = InVector * -(_RecoilTimeline.RecoilRecoverSpeed);
+	_Owner->AddControllerRollInput(_RecoilTimeline.InterpVector.X);
+	_Owner->AddControllerPitchInput(_RecoilTimeline.InterpVector.Y);
+	//_Owner->AddControllerYawInput(_RecoilTimeline.InterpVector.Z);
 }
