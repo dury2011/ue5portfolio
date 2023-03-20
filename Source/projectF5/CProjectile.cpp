@@ -19,7 +19,6 @@ ACProjectile::ACProjectile()
 	if (_ProjectileComponent)
 	{
 		_ProjectileComponent->ProjectileGravityScale = 1.0f;
-		_ProjectileComponent->InitialSpeed = _ProjectileSpeed;
 		// Projectile Max ¼Óµµ
 		_ProjectileComponent->MaxSpeed = 100000.0f;
 	}
@@ -39,6 +38,10 @@ void ACProjectile::BeginPlay()
 	{
 		_SphereComponent->OnComponentBeginOverlap.AddDynamic(this, &ACProjectile::BeginOverlap);
 		//_SphereComponent->OnComponentHit.AddDynamic(this, &ACProjectile::Hit);
+	}
+	if (_ProjectileComponent)
+	{
+		_ProjectileComponent->InitialSpeed = _ProjectileSpeed;
 	}
 }
 

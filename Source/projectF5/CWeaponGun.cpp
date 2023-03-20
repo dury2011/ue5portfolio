@@ -53,9 +53,6 @@ void ACWeaponGun::StartAbility()
 	
 	_WeaponGunInfo.BFiring = true;
 	
-	_RecoilTimeline.RecoilTimeline.SetPlayRate(_RecoilTimeline.RecoilSpeed);
-	_RecoilTimeline.RecoilTimeline.Play();
-
 	switch (_WeaponGunInfo.FireSelectorType)
 	{
 		case EWeaponGunFireSelectorType::SemiAuto:
@@ -71,6 +68,9 @@ void ACWeaponGun::StartAbility()
 		default:
 			break;
 	}
+
+	_RecoilTimeline.RecoilTimeline.SetPlayRate(_RecoilTimeline.RecoilSpeed);
+	_RecoilTimeline.RecoilTimeline.Play();
 }
 
 void ACWeaponGun::EndAbility()
